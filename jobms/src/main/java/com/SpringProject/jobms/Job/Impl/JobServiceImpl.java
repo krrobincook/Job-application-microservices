@@ -3,6 +3,8 @@ import com.SpringProject.jobms.Job.DTO.JobDTO;
 import com.SpringProject.jobms.Job.Job;
 import com.SpringProject.jobms.Job.JobRepository;
 import com.SpringProject.jobms.Job.JobService;
+import com.SpringProject.jobms.Job.clients.CompanyClient;
+import com.SpringProject.jobms.Job.clients.ReviewClient;
 import com.SpringProject.jobms.Job.external.Company;
 import com.SpringProject.jobms.Job.external.Review;
 import com.SpringProject.jobms.Job.mapper.JobMapper;
@@ -26,8 +28,13 @@ public class JobServiceImpl implements JobService {
     @Autowired
     RestTemplate restTemplate;
 
-    public JobServiceImpl(JobRepository jobRepository) {
+    private CompanyClient companyClient;
+    private ReviewClient reviewClient;
+
+    public JobServiceImpl(JobRepository jobRepository, CompanyClient companyClient, ReviewClient reviewClient) {
         this.jobRepository = jobRepository;
+        this.companyClient = companyClient;
+        this.reviewClient = reviewClient;
     }
 
     @Override
@@ -48,24 +55,8 @@ public class JobServiceImpl implements JobService {
         if(job == null){
             throw new RuntimeException("Job is null");
         }
-        Company company = null;
-
-        try {
-            company = restTemplate.getForObject(
-                    "http://COMPANY-SERVICE:8081/companies/" + job.getCompanyId(),
-                    Company.class
-            );
-        } catch (HttpClientErrorException.NotFound e) {
-            System.out.println("Company not found: " + job.getCompanyId());
-        }
-
-        ResponseEntity<List<Review>> reviewResponse = restTemplate.exchange(
-                "http://REVIEW-SERVICE:8083/reviews?companyId=" + job.getCompanyId(),
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<Review>>() {}
-        );
-        List<Review> reviews = reviewResponse.getBody();
+        Company company = companyClient.getCompany(job.getCompanyId());
+        List<Review> reviews = reviewClient.getReview(job.getCompanyId());
         JobDTO jobDTO = JobMapper.mapToJobWithCompanyDto(job, company, reviews);
         return jobDTO;
     }
