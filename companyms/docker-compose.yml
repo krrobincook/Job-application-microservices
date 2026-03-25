@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: robin
+      POSTGRES_DB: jobdb
+      TZ: Asia/Kolkata
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - my-network
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - my-network
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - 9411:9411
+    networks:
+      - my-network
+
+
+volumes:
+  postgres_data:
+
+networks:
+  my-network:
+    driver: bridge
