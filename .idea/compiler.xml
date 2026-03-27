@@ -8,12 +8,16 @@
         <outputRelativeToContentRoot value="true" />
         <module name="reviewms" />
         <module name="companyms" />
+        <module name="API-Gateway" />
         <module name="jobms" />
+        <module name="configserver" />
         <module name="service-registry" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="API-Gateway" target="17" />
       <module name="companyms" target="17" />
+      <module name="configserver" target="17" />
       <module name="jobms" target="17" />
       <module name="reviewms" target="17" />
       <module name="service-registry" target="17" />
@@ -21,7 +25,9 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="API-Gateway" options="-parameters" />
       <module name="companyms" options="-parameters" />
+      <module name="configserver" options="-parameters" />
       <module name="jobms" options="-parameters" />
       <module name="reviewms" options="-parameters" />
       <module name="service-registry" options="-parameters" />

@@ -1,9 +1,10 @@
-package com.SpringProject.reviewms;
+package com.SpringProject.API_Gateway;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
 @SpringBootApplication
-public class ReviewmsApplication {
+public class ApiGatewayApplication {
 	public static void main(String[] args) {
-		SpringApplication.run(ReviewmsApplication.class, args);
+		SpringApplication.run(ApiGatewayApplication.class, args);
 	}
 }
