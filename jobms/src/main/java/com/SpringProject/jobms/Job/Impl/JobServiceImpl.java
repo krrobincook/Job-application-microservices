@@ -8,6 +8,7 @@ import com.SpringProject.jobms.Job.clients.ReviewClient;
 import com.SpringProject.jobms.Job.external.Company;
 import com.SpringProject.jobms.Job.external.Review;
 import com.SpringProject.jobms.Job.mapper.JobMapper;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -34,17 +35,24 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    @CircuitBreaker(name = "companyBreaker", fallbackMethod = "companyBreakerFallback")
     public List<JobDTO> findAll() {
         List<Job> jobs = jobRepository.findAll();
         List<JobDTO> jobWithCompanyDTOS = new ArrayList<>();
-        return jobs.stream().map(job -> {
-            try {
-                return convertToDto(job);
-            } catch (Exception e){
-                System.out.println("Skipped job Id: "+ job.getId());
-                return null;
-            }
-        }).filter(Objects::nonNull).collect(Collectors.toList());
+        return jobs.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<JobDTO> companyBreakerFallback(Exception e) {
+        List<JobDTO> list = new ArrayList<>();
+
+        JobDTO dummy = new JobDTO();
+        dummy.setTitle("Dummy Job");
+        dummy.setDescription("Fallback response due to service failure");
+
+        list.add(dummy);
+        return list;
     }
 
     private JobDTO convertToDto(Job job){
