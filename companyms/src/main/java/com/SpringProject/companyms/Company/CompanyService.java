@@ -1,4 +1,6 @@
 package com.SpringProject.companyms.Company;
+import com.SpringProject.companyms.dto.ReviewMessage;
+
 import java.util.List;
 public interface CompanyService {
     List<Company> getAllCompanies();
@@ -8,4 +10,6 @@ public interface CompanyService {
 
     boolean deleteCompanyById(Long id);
     Company getCompanyById(Long id);
+
+    public void updateCompanyRating(ReviewMessage reviewMessage);
 }

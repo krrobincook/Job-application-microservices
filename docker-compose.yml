@@ -1,0 +1,125 @@
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: robin
+      POSTGRES_DB: jobdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - my-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - my-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - my-network
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - my-network
+
+  configserver:
+    build: ./configserver
+    container_name: configserver
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    networks:
+      - my-network
+
+  service-registry:
+    build: ./service-registry
+    container_name: service-registry
+    ports:
+      - "8761:8761"
+    depends_on:
+      - configserver
+    networks:
+      - my-network
+
+  companyms:
+    build: ./companyms
+    restart: always
+    container_name: companyms
+    depends_on:
+      - service-registry
+      - rabbitmq
+      - postgres
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - my-network
+
+  jobms:
+    build: ./jobms
+    restart: always
+    container_name: jobms
+    depends_on:
+      - service-registry
+      - rabbitmq
+      - postgres
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - my-network
+
+  reviewms:
+    build: ./reviewms
+    restart: always
+    container_name: reviewms
+    depends_on:
+      - service-registry
+      - rabbitmq
+      - postgres
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - my-network
+
+  api-gateway:
+    build: ./API-Gateway
+    container_name: api-gateway
+    ports:
+      - "8084:8084"
+    depends_on:
+      - service-registry
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - my-network
+
+volumes:
+  postgres_data:
+
+networks:
+  my-network:
+    driver: bridge

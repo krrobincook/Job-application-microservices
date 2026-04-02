@@ -40,7 +40,6 @@ public class JobServiceImpl implements JobService {
     @Override
 //  @CircuitBreaker(name = "companyBreaker", fallbackMethod = "companyBreakerFallback")
 //  @Retry(name = "companyBreaker", fallbackMethod = "companyBreakerFallback")
-
     @RateLimiter(name = "companyBreaker", fallbackMethod = "companyBreakerFallback")
     public List<JobDTO> findAll() {
         System.out.println("Attempt: "+ ++attempt);
@@ -66,8 +65,19 @@ public class JobServiceImpl implements JobService {
         if(job == null){
             throw new RuntimeException("Job is null");
         }
-        Company company = companyClient.getCompany(job.getCompanyId());
-        List<Review> reviews = reviewClient.getReview(job.getCompanyId());
+        Company company = null;
+        List<Review> reviews = new ArrayList<>();
+
+        if (job.getCompanyId() != null) {
+            try {
+                company = companyClient.getCompany(job.getCompanyId());
+                reviews = reviewClient.getReview(job.getCompanyId());
+            } catch (Exception e) {
+                // If company service/review service fails, we still return the job title
+                System.out.println("External service call failed for companyId: " + job.getCompanyId());
+            }
+        }
+
         JobDTO jobDTO = JobMapper.mapToJobWithCompanyDto(job, company, reviews);
         return jobDTO;
     }
